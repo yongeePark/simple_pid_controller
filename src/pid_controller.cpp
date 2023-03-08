@@ -6,6 +6,9 @@
 #include <vector>
 #include <array>
 
+
+bool is_pose_available = false;
+
 using namespace ros;
 void RegulateVelocity(double& vel, const double limit)
 {
@@ -61,7 +64,9 @@ public:
 		current_position_[1] = msg->pose.position.y;	
 		current_position_[2] = msg->pose.position.z;	
 
-		PublishVelocity();
+		//PublishVelocity();
+		is_pose_available = true;
+
 	}
 	void SetGoal(const std::array<double,3> msg)
 	{
@@ -83,6 +88,8 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "PIDController");
 	PIDController controller;
 
+	ros::Rate loop_rate(20);
+
 	// define mission points
 	std::vector<std::array<double,3>> GoalList;
 	std::array<double,3> position_candidate;
@@ -99,7 +106,7 @@ int main(int argc, char **argv)
 
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 2.0;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 
@@ -120,6 +127,7 @@ int main(int argc, char **argv)
 		controller.PublishVelocity();
 
 		spinOnce();
+		loop_rate.sleep();
 	}
 	return 0;
 }
