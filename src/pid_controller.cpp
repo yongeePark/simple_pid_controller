@@ -6,10 +6,11 @@
 #include <vector>
 #include <array>
 
-
+using namespace ros;
+using namespace std;
 bool is_pose_available = false;
 
-using namespace ros;
+
 void RegulateVelocity(double& vel, const double limit)
 {
 	if(abs(vel) > limit)
@@ -42,7 +43,7 @@ public:
 	void PublishVelocity()
 	{
 		double velxy_limit = 0.3;
-		double velz_limit = 0.4;
+		double velz_limit = 0.6;
 		double cmd_x = (goal_[0] - current_position_[0]) * Kxy;
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz;
@@ -104,7 +105,7 @@ int main(int argc, char **argv)
 	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
-	position_candidate[0] = 0.0;
+	position_candidate[0] = -1.0;
 	position_candidate[1] = 0.0;
 	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
@@ -113,21 +114,41 @@ int main(int argc, char **argv)
 	// main loop
 	int path_length = GoalList.size();
 	controller.SetGoal(GoalList.at(0));
-	int index = 1;
+	int index = 0;
 
+	cout<<"start PID controller"<<endl;
+
+	for(int i=0; i<GoalList.size(); i++)
+	{
+		cout<<"GOAL "<<i+1<<" : "<<GoalList.at(i)[0]<<", "<<GoalList.at(i)[1]<<", "<<GoalList.at(i)[2]<<", "<<endl;
+	}
+
+	static int count = 0;
 	while(ok())
 	{
 		// check whether current goal is achieved.
 		if (controller.GetDistToGoal() < 0.15 && index < (path_length-1))
 		{
 			// go to the next goal.
-			controller.SetGoal(GoalList.at(index));
 			index++;
+			controller.SetGoal(GoalList.at(index));
 		}
 		controller.PublishVelocity();
 
 		spinOnce();
 		loop_rate.sleep();
+
+		if(count>10)
+		{
+			cout<<"==================="<<endl;
+			std::cout<<"Current index : "<<index<<endl
+				<<"Maximum index : "<<path_length-1<<endl
+				<<"GOAL : "<<GoalList.at(index)[0]<<", "<<GoalList.at(index)[1]<<", "<<GoalList.at(index)[2] <<endl;
+				
+			cout<<"==================="<<endl;
+			count = 0;
+		}
+		count++;
 	}
 	return 0;
 }
