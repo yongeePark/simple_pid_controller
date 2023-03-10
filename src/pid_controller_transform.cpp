@@ -2,10 +2,15 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <nav_msgs/Odometry.h>
 
 #include <vector>
 #include <array>
 
+// 20230309
+// This code will do transform when receives odometry
+// from camera frame to world frame
+// It is for vins!
 using namespace ros;
 using namespace std;
 bool is_pose_available = false;
@@ -35,7 +40,7 @@ public:
 	// constructor
 	PIDController() : goal_{0.0,0.0,0.0}
 	{
-		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
+		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",10);
 		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::OdomCallback, this);
 		Kxy = 1.0;
 		Kz  = 1.0;
@@ -43,7 +48,7 @@ public:
 	void PublishVelocity()
 	{
 		double velxy_limit = 0.3;
-		double velz_limit = 0.4;
+		double velz_limit = 0.5;
 		double cmd_x = (goal_[0] - current_position_[0]) * Kxy;
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz;
@@ -138,13 +143,13 @@ int main(int argc, char **argv)
 		loop_rate.sleep();
 		spinOnce();
 
-		if(count%10==0)
+		if(count>10)
 		{
 			cout<<"==================="<<endl;
-			cout<<"print count : "<<count<<endl;
 			std::cout<<"Current index : "<<index<<endl
 				<<"Last index : "<<path_length-1<<endl
 				<<"GOAL : "<<GoalList.at(index)[0]<<", "<<GoalList.at(index)[1]<<", "<<GoalList.at(index)[2] <<endl;
+			count = 0;
 		}
 		count++;
 	}
