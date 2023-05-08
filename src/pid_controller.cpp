@@ -6,6 +6,9 @@
 #include <vector>
 #include <array>
 
+#define RadToDeg 180/M_PI
+
+
 using namespace ros;
 using namespace std;
 bool is_pose_available = false;
@@ -59,14 +62,15 @@ public:
 	{
 		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
 		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::OdomCallback, this);
-		Kxy = 1.0;
-		Kz  = 0.8;
+		Kxy  = 1.0;
+		Kz   = 0.8;
+		Kyaw = 3.0;
 	}
 	void PublishVelocity()
 	{
 		double velxy_limit = 0.4;
-		double velz_limit = 0.2;
-		double yaw_limit = 0.1;
+		double velz_limit = 0.3;
+		double yaw_limit = 0.15;
 
 
 		//calculate linear velocity
@@ -92,18 +96,29 @@ public:
 		}
 
 		
-		double cmd_r = yaw_diff * Kz;
+		double cmd_r = yaw_diff * Kyaw;
 		RegulateVelocity(cmd_r,yaw_limit);
 		
 		geometry_msgs::TwistStamped command_msg;
 		command_msg.header.stamp = ros::Time::now();
 
+
+		if (abs(yaw_diff * RadToDeg) > 30 && GetXYDistToGoal() > 0.3
+			&& current_position_[2] > 0.3)
+		{
+		    cmd_x = cmd_x / 5;
+		    cmd_y = cmd_y / 5;
+		}
+		if ( current_position_[2] < 0.3)
+		{   cmd_r = 0;	}
+
+		// assign
 		command_msg.twist.linear.x = cmd_x;
 		command_msg.twist.linear.y = cmd_y; 
 		command_msg.twist.linear.z = cmd_z; 
 
-		command_msg.twist.angular.z = 0; 
-		//command_msg.twist.angular.z = cmd_r; 
+		//command_msg.twist.angular.z = 0; 
+		command_msg.twist.angular.z = cmd_r; 
 		pub_.publish(command_msg);
 	}
 	void OdomCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -135,6 +150,12 @@ public:
 			+ pow(goal_[1] - current_position_[1] , 2)
 			+ pow(goal_[2] - current_position_[2] , 2));
 	}
+	// add xy dist function
+	double GetXYDistToGoal()
+	{
+		return sqrt(pow(goal_[0] - current_position_[0] , 2)
+			+ pow(goal_[1] - current_position_[1] , 2));
+	}
 
 };
 
@@ -152,7 +173,7 @@ int main(int argc, char **argv)
 	// 1st
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 0.0;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	// 2nd
@@ -190,7 +211,7 @@ int main(int argc, char **argv)
 	// 7th
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 0.0;
+	position_candidate[2] = -0.1;
 	GoalList.push_back(position_candidate);	
 
 
