@@ -1,0 +1,5 @@
+use_yaw : false
+
+Kxy : 1.0
+Kz : 0.8
+Kyaw : 3.0

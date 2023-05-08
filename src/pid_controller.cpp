@@ -43,6 +43,7 @@ class PIDController
 {
 private:
 	NodeHandle nh_;
+	NodeHandle nh_param_;
 	Publisher pub_;
 	Subscriber sub_;
 
@@ -52,19 +53,49 @@ private:
 
 	double goal_[3];
 
-	double Kxy;
-	double Kz;
-	double Kyaw;
+	double Kxy_;
+	double Kz_;
+	double Kyaw_;
+
+	bool use_yaw_;
 
 public:
 	// constructor
-	PIDController() : goal_{0.0,0.0,0.0}
+	PIDController(const ros::NodeHandle& nh, const ros::NodeHandle& nh_param)
+	:nh_(nh), nh_param_(nh_param), goal_{0.0,0.0,0.0}, use_yaw_(false)
 	{
 		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
-		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::OdomCallback, this);
-		Kxy  = 1.0;
-		Kz   = 0.8;
-		Kyaw = 3.0;
+		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
+
+
+		// Parameter Setting
+		if (!nh_param_.getParam("/scout/PIDController/use_yaw",use_yaw_))
+        {
+            std::cout<<"[Warning] Please set [use_yaw_] parameter, default : false"<<std::endl;
+            use_yaw_ = false;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/Kxy",Kxy_))
+        {
+            std::cout<<"[Warning] Please set [Kxy] parameter, default : 1.0"<<std::endl;
+            Kxy_ = 1.0;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/Kz",Kz_))
+        {
+            std::cout<<"[Warning] Please set [Kz] parameter, default : 0.8"<<std::endl;
+            Kz_ = 0.8;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/Kyaw",Kyaw_))
+        {
+            std::cout<<"[Warning] Please set [Kyaw] parameter, default : 3.0"<<std::endl;
+            Kyaw_ = 3.0;
+        }
+		std::cout<<"================================="<<std::endl;
+		std::cout<<"Parameters"<<std::endl
+		<<"use_yaw_ : "<< (use_yaw_ ? "true" : "false")<<endl
+		<<"Kxy_     : "<<Kxy_<<endl
+		<<"Kz_      : "<<Kz_<<endl
+		<<"Kyaw_    : "<<Kyaw_<<endl;
+		std::cout<<"================================="<<std::endl;
 	}
 	void PublishVelocity()
 	{
@@ -74,9 +105,9 @@ public:
 
 
 		//calculate linear velocity
-		double cmd_x = (goal_[0] - current_position_[0]) * Kxy;
-		double cmd_y = (goal_[1] - current_position_[1]) * Kxy;
-		double cmd_z = (goal_[2] - current_position_[2]) * Kz;
+		double cmd_x = (goal_[0] - current_position_[0]) * Kxy_;
+		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
+		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
 		RegulateVelocity(cmd_x,velxy_limit);
 		RegulateVelocity(cmd_y,velxy_limit);
 		RegulateVelocity(cmd_z,velz_limit);
@@ -96,7 +127,7 @@ public:
 		}
 
 		
-		double cmd_r = yaw_diff * Kyaw;
+		double cmd_r = yaw_diff * Kyaw_;
 		RegulateVelocity(cmd_r,yaw_limit);
 		
 		geometry_msgs::TwistStamped command_msg;
@@ -121,7 +152,7 @@ public:
 		command_msg.twist.angular.z = cmd_r; 
 		pub_.publish(command_msg);
 	}
-	void OdomCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+	void PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 	{
 		localpose_= *msg;
 
@@ -162,9 +193,11 @@ public:
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "PIDController");
-	PIDController controller;
+	ros::NodeHandle nh;
+  	ros::NodeHandle nh_param("~");
+	PIDController controller(nh, nh_param);
 
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(30);
 
 	// define mission points
 	std::vector<std::array<double,3>> GoalList;
@@ -173,39 +206,39 @@ int main(int argc, char **argv)
 	// 1st
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	// 2nd
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	
 	// 3rd
 	position_candidate[0] = 5.0;
 	position_candidate[1] = 3.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	
 	// 4th
 	position_candidate[0] = 8.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	// 5th
 	position_candidate[0] = 5.0;
 	position_candidate[1] = -3.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	// 6th
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.0;
+	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
 	// 7th
