@@ -3,3 +3,7 @@ use_yaw : false
 Kxy : 1.0
 Kz : 0.8
 Kyaw : 3.0
+
+velxy_limit : 0.4
+velz_limit : 0.2
+yaw_limit : 0.15

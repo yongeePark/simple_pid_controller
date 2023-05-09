@@ -39,6 +39,8 @@ void RegulateVelocity(double& vel, const double limit)
 		vel = vel / abs(vel) * limit;
 	}
 }
+
+// Class define
 class PIDController
 {
 private:
@@ -58,6 +60,12 @@ private:
 	double Kyaw_;
 
 	bool use_yaw_;
+
+	double velxy_limit_;
+	double velz_limit_;
+	double yaw_limit_;
+
+
 
 public:
 	// constructor
@@ -89,6 +97,21 @@ public:
             std::cout<<"[Warning] Please set [Kyaw] parameter, default : 3.0"<<std::endl;
             Kyaw_ = 3.0;
         }
+		if (!nh_param_.getParam("/scout/PIDController/velxy_limit",velxy_limit_))
+        {
+            std::cout<<"[Warning] Please set [velxy_limit] parameter, default : 0.4"<<std::endl;
+            velxy_limit_ = 0.4;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/velz_limit",velz_limit_))
+        {
+            std::cout<<"[Warning] Please set [velz_limit] parameter, default : 0.2"<<std::endl;
+            velz_limit_ = 0.2;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/yaw_limit",yaw_limit_))
+        {
+            std::cout<<"[Warning] Please set [yaw_limit] parameter, default : 0.15"<<std::endl;
+            yaw_limit_ = 0.15;
+        }
 		std::cout<<"================================="<<std::endl;
 		std::cout<<"Parameters"<<std::endl
 		<<"use_yaw_ : "<< (use_yaw_ ? "true" : "false")<<endl
@@ -99,18 +122,16 @@ public:
 	}
 	void PublishVelocity()
 	{
-		double velxy_limit = 0.4;
-		double velz_limit = 0.20;
-		double yaw_limit = 0.15;
+
 
 
 		//calculate linear velocity
 		double cmd_x = (goal_[0] - current_position_[0]) * Kxy_;
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
-		RegulateVelocity(cmd_x,velxy_limit);
-		RegulateVelocity(cmd_y,velxy_limit);
-		RegulateVelocity(cmd_z,velz_limit);
+		RegulateVelocity(cmd_x,velxy_limit_);
+		RegulateVelocity(cmd_y,velxy_limit_);
+		RegulateVelocity(cmd_z,velz_limit_);
 
 		// current yaw angle
 		double current_yaw = current_attitude_[2];
@@ -128,7 +149,7 @@ public:
 
 		
 		double cmd_r = yaw_diff * Kyaw_;
-		RegulateVelocity(cmd_r,yaw_limit);
+		RegulateVelocity(cmd_r,yaw_limit_);
 		
 		geometry_msgs::TwistStamped command_msg;
 		command_msg.header.stamp = ros::Time::now();
@@ -209,43 +230,42 @@ int main(int argc, char **argv)
 	position_candidate[2] = 1.2;
 	GoalList.push_back(position_candidate);	
 
-	// 2nd
-//	position_candidate[0] = 0.0;
-//	position_candidate[1] = 0.0;
-//	position_candidate[2] = 1.2;
-//	GoalList.push_back(position_candidate);	
+	position_candidate[0] = 1.0;
+	position_candidate[1] = 0.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
 
 	
-	// 3rd
-//	position_candidate[0] = 5.0;
-//	position_candidate[1] = 3.0;
-//	position_candidate[2] = 1.2;
-//	GoalList.push_back(position_candidate);	
+	position_candidate[0] = 6.0;
+	position_candidate[1] = 3.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
 
 	
-	// 4th
-//	position_candidate[0] = 8.0;
-//	position_candidate[1] = 0.0;
-//	position_candidate[2] = 1.2;
-//	GoalList.push_back(position_candidate);	
+	position_candidate[0] = 9.0;
+	position_candidate[1] = 0.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
 
-	// 5th
-//	position_candidate[0] = 5.0;
-//	position_candidate[1] = -3.0;
-//	position_candidate[2] = 1.2;
-//	GoalList.push_back(position_candidate);	
+	position_candidate[0] = 6.0;
+	position_candidate[1] = -3.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
 
-	// 6th
-//	position_candidate[0] = 0.0;
-//	position_candidate[1] = 0.0;
-//	position_candidate[2] = 1.2;
-//	GoalList.push_back(position_candidate);	
+	position_candidate[0] = 1.0;
+	position_candidate[1] = 0.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
 
-	// 7th
-//	position_candidate[0] = 0.0;
-//	position_candidate[1] = 0.0;
-	//position_candidate[2] = -0.1;
-	//GoalList.push_back(position_candidate);	
+	position_candidate[0] = 0.0;
+	position_candidate[1] = 0.0;
+	position_candidate[2] = 1.2;
+	GoalList.push_back(position_candidate);	
+
+	position_candidate[0] = 0.0;
+	position_candidate[1] = 0.0;
+	position_candidate[2] = -0.1;
+	GoalList.push_back(position_candidate);	
 
 
 	// main loop
