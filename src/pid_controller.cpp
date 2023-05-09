@@ -100,7 +100,7 @@ public:
 	void PublishVelocity()
 	{
 		double velxy_limit = 0.4;
-		double velz_limit = 0.3;
+		double velz_limit = 0.20;
 		double yaw_limit = 0.15;
 
 
@@ -210,42 +210,42 @@ int main(int argc, char **argv)
 	GoalList.push_back(position_candidate);	
 
 	// 2nd
-	position_candidate[0] = 0.0;
-	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 0.0;
+//	position_candidate[1] = 0.0;
+//	position_candidate[2] = 1.2;
+//	GoalList.push_back(position_candidate);	
 
 	
 	// 3rd
-	position_candidate[0] = 5.0;
-	position_candidate[1] = 3.0;
-	position_candidate[2] = 1.2;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 5.0;
+//	position_candidate[1] = 3.0;
+//	position_candidate[2] = 1.2;
+//	GoalList.push_back(position_candidate);	
 
 	
 	// 4th
-	position_candidate[0] = 8.0;
-	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 8.0;
+//	position_candidate[1] = 0.0;
+//	position_candidate[2] = 1.2;
+//	GoalList.push_back(position_candidate);	
 
 	// 5th
-	position_candidate[0] = 5.0;
-	position_candidate[1] = -3.0;
-	position_candidate[2] = 1.2;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 5.0;
+//	position_candidate[1] = -3.0;
+//	position_candidate[2] = 1.2;
+//	GoalList.push_back(position_candidate);	
 
 	// 6th
-	position_candidate[0] = 0.0;
-	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 0.0;
+//	position_candidate[1] = 0.0;
+//	position_candidate[2] = 1.2;
+//	GoalList.push_back(position_candidate);	
 
 	// 7th
-	position_candidate[0] = 0.0;
-	position_candidate[1] = 0.0;
-	position_candidate[2] = -0.1;
-	GoalList.push_back(position_candidate);	
+//	position_candidate[0] = 0.0;
+//	position_candidate[1] = 0.0;
+	//position_candidate[2] = -0.1;
+	//GoalList.push_back(position_candidate);	
 
 
 	// main loop
