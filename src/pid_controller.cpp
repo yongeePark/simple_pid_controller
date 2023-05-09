@@ -48,8 +48,10 @@ private:
 	NodeHandle nh_param_;
 	Publisher pub_;
 	Subscriber sub_;
+	Subscriber sub_vel_;
 
 	double current_position_[3];
+	double current_velocity_[3];
 	double current_attitude_[3];
 	geometry_msgs::PoseStamped localpose_;
 
@@ -57,6 +59,7 @@ private:
 
 	double Kxy_;
 	double Kz_;
+	double KDz_;
 	double Kyaw_;
 
 	bool use_yaw_;
@@ -74,6 +77,7 @@ public:
 	{
 		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
 		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
+		sub_vel_ = nh_.subscribe("/scout/mavros/local_position/velocity_local",1,&PIDController::VelCallback, this);
 
 
 		// Parameter Setting
@@ -91,6 +95,11 @@ public:
         {
             std::cout<<"[Warning] Please set [Kz] parameter, default : 0.8"<<std::endl;
             Kz_ = 0.8;
+        }
+		if (!nh_param_.getParam("/scout/PIDController/KDz",KDz_))
+        {
+            std::cout<<"[Warning] Please set [KDz] parameter, default : 0.3"<<std::endl;
+            Kz_ = 0.3;
         }
 		if (!nh_param_.getParam("/scout/PIDController/Kyaw",Kyaw_))
         {
@@ -122,13 +131,10 @@ public:
 	}
 	void PublishVelocity()
 	{
-
-
-
 		//calculate linear velocity
 		double cmd_x = (goal_[0] - current_position_[0]) * Kxy_;
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
-		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
+		double cmd_z = (goal_[2] - current_position_[2]) * Kz_ + (0 - current_velocity_[2]) * KDz_;
 		RegulateVelocity(cmd_x,velxy_limit_);
 		RegulateVelocity(cmd_y,velxy_limit_);
 		RegulateVelocity(cmd_z,velz_limit_);
@@ -136,6 +142,9 @@ public:
 		// current yaw angle
 		double current_yaw = current_attitude_[2];
 		double goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);
+
+		if(!use_yaw_)
+		{	goal_yaw = 0;	}
 		double yaw_diff = goal_yaw - current_yaw;
 
 		// regulate yaw angle
@@ -164,6 +173,10 @@ public:
 		if ( current_position_[2] < 0.3)
 		{   cmd_r = 0;	}
 
+		// 2023.05.09
+		// temp modification
+		//if (GetXYDistToGoal() > 
+
 		// assign
 		command_msg.twist.linear.x = cmd_x;
 		command_msg.twist.linear.y = cmd_y; 
@@ -189,6 +202,13 @@ public:
 		QuaternionToEuler(current_attitude_[0],current_attitude_[1],current_attitude_[2]);
 		//PublishVelocity();
 		is_pose_available = true;
+	}
+	void VelCallback(const geometry_msgs::TwistStamped::ConstPtr& msg)
+	{
+
+		current_velocity_[0] = msg->twist.linear.x;	
+		current_velocity_[1] = msg->twist.linear.y; 
+		current_velocity_[2] = msg->twist.linear.z;
 	}
 	void SetGoal(const std::array<double,3> msg)
 	{
@@ -227,44 +247,44 @@ int main(int argc, char **argv)
 	// 1st
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 1.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	
 	position_candidate[0] = 6.0;
 	position_candidate[1] = 3.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	
 	position_candidate[0] = 9.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 6.0;
 	position_candidate[1] = -3.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 1.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.2;
+	position_candidate[2] = 1.5;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = -0.1;
+	position_candidate[2] = -0.2;
 	GoalList.push_back(position_candidate);	
 
 
