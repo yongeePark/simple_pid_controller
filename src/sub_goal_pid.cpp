@@ -75,7 +75,7 @@ public:
 	{
 		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
 		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
-		sub_goal_ = nh_.subscribe("/goal_from_msj",1,&PIDController::GoalCallback, this);
+		sub_goal_ = nh_.subscribe("/photo_zone_pose",1,&PIDController::GoalCallback, this);
 
 
 		// Parameter Setting
@@ -137,7 +137,8 @@ public:
 
 		// current yaw angle
 		double current_yaw = current_attitude_[2];
-		double goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);
+		//double goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);
+		double goal_yaw = 0; 
 		double yaw_diff = goal_yaw - current_yaw;
 
 		// regulate yaw angle
@@ -157,12 +158,14 @@ public:
 		command_msg.header.stamp = ros::Time::now();
 
 
+		/*
 		if (abs(yaw_diff * RadToDeg) > 30 && GetXYDistToGoal() > 0.3
 			&& current_position_[2] > 0.3)
 		{
 		    cmd_x = cmd_x / 5;
 		    cmd_y = cmd_y / 5;
 		}
+		*/
 		if ( current_position_[2] < 0.3)
 		{   cmd_r = 0;	}
 
@@ -310,6 +313,7 @@ int main(int argc, char **argv)
 		{
 			cout<<"==================="<<endl;
 			cout<<"print count : "<<count<<endl;
+			cout<<"sub goal"<<std::endl;
 			/*
 			std::cout<<"Current index : "<<index<<endl
 				<<"Last index : "<<path_length-1<<endl
