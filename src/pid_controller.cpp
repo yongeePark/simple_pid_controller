@@ -247,44 +247,44 @@ int main(int argc, char **argv)
 	// 1st
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.5;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 1.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.5;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	
-	position_candidate[0] = 6.0;
-	position_candidate[1] = 3.0;
-	position_candidate[2] = 1.5;
+	position_candidate[0] = 2.0;
+	position_candidate[1] = 1.0;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	
-	position_candidate[0] = 9.0;
+	position_candidate[0] = 3.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.5;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
-	position_candidate[0] = 6.0;
-	position_candidate[1] = -3.0;
-	position_candidate[2] = 1.5;
+	position_candidate[0] = 2.0;
+	position_candidate[1] = -1.0;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 1.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.5;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = 1.5;
+	position_candidate[2] = 1.0;
 	GoalList.push_back(position_candidate);	
 
 	position_candidate[0] = 0.0;
 	position_candidate[1] = 0.0;
-	position_candidate[2] = -0.2;
+	position_candidate[2] = -0.1;
 	GoalList.push_back(position_candidate);	
 
 
