@@ -1,0 +1,3 @@
+uint8 modes
+float32 subject_ratio
+float32 lateral_offset

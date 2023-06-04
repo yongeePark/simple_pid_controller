@@ -11,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   std_msgs
+#message_generation
+)
+find_package(catkin REQUIRED COMPONENTS
+  selfie_mission_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,10 +51,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
+#add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+# VisualTracking.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -68,9 +71,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
+#generate_messages(
 #   DEPENDENCIES
-#   geometrY_msgs#   std_msgs
+#   std_msgs
 # )
 
 ################################################
@@ -142,6 +145,11 @@ target_link_libraries(PIDController
 add_executable(sub_goal_pid src/sub_goal_pid.cpp)
 add_dependencies(sub_goal_pid ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(sub_goal_pid
+		${catkin_LIBRARIES}
+)
+add_executable(sub_selfie_pid src/sub_selfie_pid.cpp)
+add_dependencies(sub_selfie_pid ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sub_selfie_pid
 		${catkin_LIBRARIES}
 )
 ## Rename C++ executable without prefix
