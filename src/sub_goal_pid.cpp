@@ -8,9 +8,9 @@
 
 #define RadToDeg 180/M_PI
 
-
 using namespace ros;
 using namespace std;
+
 bool is_pose_available = false;
 double q[4];
 
@@ -49,13 +49,14 @@ private:
 	Publisher pub_;
 	Subscriber sub_;
 	Subscriber sub_goal_;
+	Subscriber sub_local_goal_;
 
 	double current_position_[3];
 	double current_attitude_[3];
 	geometry_msgs::PoseStamped localpose_;
 
 	double goal_[3];
-
+	double last_yaw;
 	double Kxy_;
 	double Kz_;
 	double Kyaw_;
@@ -66,50 +67,51 @@ private:
 	double velz_limit_;
 	double yaw_limit_;
 
-
+	double last_cmd_x_;
+	double last_cmd_y_;
 
 public:
 	// constructor
 	PIDController(const ros::NodeHandle& nh, const ros::NodeHandle& nh_param)
-	:nh_(nh), nh_param_(nh_param), goal_{0.0,0.0,0.0}, use_yaw_(false)
+	:nh_(nh), nh_param_(nh_param), goal_{0.0,0.0,1.0}, use_yaw_(false), last_yaw(0.0), last_cmd_x_(0.0), last_cmd_y_(0.0)
 	{
-		pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/scout/mavros/setpoint_velocity/cmd_vel",1);
-		sub_ = nh_.subscribe("/scout/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
-		sub_goal_ = nh_.subscribe("/photo_zone_pose",1,&PIDController::GoalCallback, this);
-
+		pub_            = nh_.advertise<geometry_msgs::TwistStamped>("/mavros/setpoint_velocity/cmd_vel",1);
+		sub_            = nh_.subscribe("/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
+		sub_goal_       = nh_.subscribe("/photo_zone_pose",1,&PIDController::GoalCallback, this);
+		sub_local_goal_ = nh_.subscribe("/apriltag_goal",1,&PIDController::LocalGoalCallback,this);
 
 		// Parameter Setting
-		if (!nh_param_.getParam("/scout/PIDController/use_yaw",use_yaw_))
+		if (!nh_param_.getParam("/sub_goal_pid/use_yaw",use_yaw_))
         {
             std::cout<<"[Warning] Please set [use_yaw_] parameter, default : false"<<std::endl;
             use_yaw_ = false;
         }
-		if (!nh_param_.getParam("/scout/PIDController/Kxy",Kxy_))
+		if (!nh_param_.getParam("/sub_goal_pid/Kxy",Kxy_))
         {
             std::cout<<"[Warning] Please set [Kxy] parameter, default : 1.0"<<std::endl;
             Kxy_ = 1.0;
         }
-		if (!nh_param_.getParam("/scout/PIDController/Kz",Kz_))
+		if (!nh_param_.getParam("/sub_goal_pid/Kz",Kz_))
         {
             std::cout<<"[Warning] Please set [Kz] parameter, default : 0.8"<<std::endl;
             Kz_ = 0.8;
         }
-		if (!nh_param_.getParam("/scout/PIDController/Kyaw",Kyaw_))
+		if (!nh_param_.getParam("/sub_goal_pid/Kyaw",Kyaw_))
         {
             std::cout<<"[Warning] Please set [Kyaw] parameter, default : 3.0"<<std::endl;
             Kyaw_ = 3.0;
         }
-		if (!nh_param_.getParam("/scout/PIDController/velxy_limit",velxy_limit_))
+		if (!nh_param_.getParam("/sub_goal_pid/velxy_limit",velxy_limit_))
         {
             std::cout<<"[Warning] Please set [velxy_limit] parameter, default : 0.4"<<std::endl;
             velxy_limit_ = 0.4;
         }
-		if (!nh_param_.getParam("/scout/PIDController/velz_limit",velz_limit_))
+		if (!nh_param_.getParam("/sub_goal_pid/velz_limit",velz_limit_))
         {
             std::cout<<"[Warning] Please set [velz_limit] parameter, default : 0.2"<<std::endl;
             velz_limit_ = 0.2;
         }
-		if (!nh_param_.getParam("/scout/PIDController/yaw_limit",yaw_limit_))
+		if (!nh_param_.getParam("/sub_goal_pid/yaw_limit",yaw_limit_))
         {
             std::cout<<"[Warning] Please set [yaw_limit] parameter, default : 0.15"<<std::endl;
             yaw_limit_ = 0.15;
@@ -124,21 +126,43 @@ public:
 	}
 	void PublishVelocity()
 	{
-
-
-
 		//calculate linear velocity
 		double cmd_x = (goal_[0] - current_position_[0]) * Kxy_;
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
-		RegulateVelocity(cmd_x,velxy_limit_);
-		RegulateVelocity(cmd_y,velxy_limit_);
-		RegulateVelocity(cmd_z,velz_limit_);
+		
+		if(GetXYDistToGoal() < 0.6)
+		{
+//			RegulateVelocity(cmd_x,0.15);
+//			RegulateVelocity(cmd_y,0.15);
+//			RegulateVelocity(cmd_z,0.15);
+
+//			cmd_x = velxy_limit_;
+//			RegulateVelocity(cmd_y,0.15); 
+//			RegulateVelocity(cmd_z,0.15);
+
+			cmd_x = last_cmd_x_;
+			cmd_y = last_cmd_y_;
+			RegulateVelocity(cmd_z,0.15);
+		}		
+		else
+		{
+			RegulateVelocity(cmd_x,velxy_limit_);
+			RegulateVelocity(cmd_y,velxy_limit_);
+			RegulateVelocity(cmd_z,velz_limit_);
+		}
+		
+
 
 		// current yaw angle
 		double current_yaw = current_attitude_[2];
-		//double goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);
-		double goal_yaw = 0; 
+		last_yaw = current_yaw; 
+		double goal_yaw = 0;
+		if(use_yaw_ == true)
+		{	goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);	}
+		
+		
+		
 		double yaw_diff = goal_yaw - current_yaw;
 
 		// regulate yaw angle
@@ -157,16 +181,7 @@ public:
 		geometry_msgs::TwistStamped command_msg;
 		command_msg.header.stamp = ros::Time::now();
 
-
-		/*
-		if (abs(yaw_diff * RadToDeg) > 30 && GetXYDistToGoal() > 0.3
-			&& current_position_[2] > 0.3)
-		{
-		    cmd_x = cmd_x / 5;
-		    cmd_y = cmd_y / 5;
-		}
-		*/
-		if ( current_position_[2] < 0.3)
+		if ( current_position_[2] < 0.3) // do not change yaw if height is lower than 0.3
 		{   cmd_r = 0;	}
 
 		// assign
@@ -174,9 +189,12 @@ public:
 		command_msg.twist.linear.y = cmd_y; 
 		command_msg.twist.linear.z = cmd_z; 
 
+		
 		//command_msg.twist.angular.z = 0; 
 		command_msg.twist.angular.z = cmd_r; 
 		pub_.publish(command_msg);
+		last_cmd_x_ = cmd_x;
+		last_cmd_y_ = cmd_y;
 	}
 	void PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 	{
@@ -200,6 +218,28 @@ public:
 		goal_[0] = msg->pose.position.x;
 		goal_[1] = msg->pose.position.y;
 		goal_[2] = msg->pose.position.z;
+	}
+	void LocalGoalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg) 
+	{
+		if(is_pose_available)
+		{
+			// Get local position x,y,z
+			double local_x = msg->pose.position.x;
+			double local_y = msg->pose.position.y;
+			double local_z = msg->pose.position.z;
+
+			// Rotate into global frame
+			// yaw angle : current_attitude_[2]
+			// cuurent x,y,z : current_position_ [0,1,2]
+			double global_x = cos(current_attitude_[2]) * local_x - sin(current_attitude_[2]) * local_y + current_position_[0];
+			double global_y = sin(current_attitude_[2]) * local_x + cos(current_attitude_[2]) * local_y + current_position_[1];
+			double global_z = local_z + current_position_[2];
+			
+			goal_[0] = global_x;
+			goal_[1] = global_y;
+			goal_[2] = global_z;
+		}
+		
 	}
 	double GetDistToGoal()
 	{

@@ -1,13 +1,13 @@
-use_yaw : false
+use_yaw : true
 
-Kxy : 1.0
-Kz : 0.8
+Kxy : 0.9
+Kz : 1.7
 KDz : 0.5
-Kyaw : 1.5
+Kyaw : 0.8
 
-velxy_limit : 0.25
-velz_limit : 0.15
-yaw_limit : 0.15
+velxy_limit : 1.0
+velz_limit : 0.8
+yaw_limit : 1.0
 
 desired_subject_ratio : 0.30
 subject_ratio_thres : 0.05

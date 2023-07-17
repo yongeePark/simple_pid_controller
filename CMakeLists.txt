@@ -13,9 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 #message_generation
 )
-find_package(catkin REQUIRED COMPONENTS
-  selfie_mission_planner
-)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -147,9 +145,9 @@ add_dependencies(sub_goal_pid ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 target_link_libraries(sub_goal_pid
 		${catkin_LIBRARIES}
 )
-add_executable(sub_selfie_pid src/sub_selfie_pid.cpp)
-add_dependencies(sub_selfie_pid ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sub_selfie_pid
+add_executable(pid_test src/pid_control_test.cpp)
+add_dependencies(pid_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pid_test
 		${catkin_LIBRARIES}
 )
 ## Rename C++ executable without prefix
