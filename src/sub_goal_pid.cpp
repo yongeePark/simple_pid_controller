@@ -56,19 +56,23 @@ private:
 	geometry_msgs::PoseStamped localpose_;
 
 	double goal_[3];
-	double last_yaw;
-	double Kxy_;
+	// double last_yaw;
+	double Kx_;
+	double Ky_;
 	double Kz_;
 	double Kyaw_;
 
 	bool use_yaw_;
 
-	double velxy_limit_;
+	double velx_limit_;
+	double vely_limit_;
 	double velz_limit_;
 	double yaw_limit_;
 
 	double last_cmd_x_;
 	double last_cmd_y_;
+
+	double last_yaw_;
 
 public:
 	// constructor
@@ -86,10 +90,15 @@ public:
             std::cout<<"[Warning] Please set [use_yaw_] parameter, default : false"<<std::endl;
             use_yaw_ = false;
         }
-		if (!nh_param_.getParam("/sub_goal_pid/Kxy",Kxy_))
+		if (!nh_param_.getParam("/sub_goal_pid/Kxy",Kx_))
         {
-            std::cout<<"[Warning] Please set [Kxy] parameter, default : 1.0"<<std::endl;
-            Kxy_ = 1.0;
+            std::cout<<"[Warning] Please set [Kx] parameter, default : 1.0"<<std::endl;
+            Kx_ = 1.0;
+        }
+		if (!nh_param_.getParam("/sub_goal_pid/Ky",Ky_))
+        {
+            std::cout<<"[Warning] Please set [Ky] parameter, default : 1.0"<<std::endl;
+            Ky_ = 1.0;
         }
 		if (!nh_param_.getParam("/sub_goal_pid/Kz",Kz_))
         {
@@ -101,10 +110,15 @@ public:
             std::cout<<"[Warning] Please set [Kyaw] parameter, default : 3.0"<<std::endl;
             Kyaw_ = 3.0;
         }
-		if (!nh_param_.getParam("/sub_goal_pid/velxy_limit",velxy_limit_))
+		if (!nh_param_.getParam("/sub_goal_pid/velx_limit",velx_limit_))
         {
-            std::cout<<"[Warning] Please set [velxy_limit] parameter, default : 0.4"<<std::endl;
-            velxy_limit_ = 0.4;
+            std::cout<<"[Warning] Please set [velx_limit] parameter, default : 0.4"<<std::endl;
+            velx_limit_ = 0.4;
+        }
+		if (!nh_param_.getParam("/sub_goal_pid/vely_limit",vely_limit_))
+        {
+            std::cout<<"[Warning] Please set [vely_limit] parameter, default : 0.4"<<std::endl;
+            vely_limit_ = 0.4;
         }
 		if (!nh_param_.getParam("/sub_goal_pid/velz_limit",velz_limit_))
         {
@@ -131,6 +145,8 @@ public:
 		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
 		
+		// initial goal : 0,0,1
+		
 		if(GetXYDistToGoal() < 0.6)
 		{
 //			RegulateVelocity(cmd_x,0.15);
@@ -156,11 +172,20 @@ public:
 
 		// current yaw angle
 		double current_yaw = current_attitude_[2];
-		last_yaw = current_yaw; 
-		double goal_yaw = 0;
-		if(use_yaw_ == true)
-		{	goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);	}
 		
+		double goal_yaw = 0;
+		if(use_yaw_ == true )
+		{	
+			if(GetXYDistToGoal() > 0.6)
+			{
+				goal_yaw = std::atan2(goal_[1]-current_position_[1],goal_[0]-current_position_[0]);	
+				last_yaw_ = goal_yaw;
+			}
+			else // Use yaw, but drone is close enough to the target
+			{
+				goal_yaw = last_yaw_;
+			}
+		}
 		
 		
 		double yaw_diff = goal_yaw - current_yaw;

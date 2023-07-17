@@ -1,11 +1,13 @@
 use_yaw : true
 
-Kxy : 0.9
+Kx : 0.9
+Ky : 0.9
 Kz : 1.7
 KDz : 0.5
 Kyaw : 0.8
 
-velxy_limit : 1.0
+velx_limit : 1.0
+vely_limit : 1.0
 velz_limit : 0.8
 yaw_limit : 1.0
 
