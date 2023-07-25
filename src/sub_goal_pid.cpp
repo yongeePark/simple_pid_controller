@@ -77,7 +77,7 @@ private:
 public:
 	// constructor
 	PIDController(const ros::NodeHandle& nh, const ros::NodeHandle& nh_param)
-	:nh_(nh), nh_param_(nh_param), goal_{0.0,0.0,1.0}, use_yaw_(false), last_yaw(0.0), last_cmd_x_(0.0), last_cmd_y_(0.0)
+	:nh_(nh), nh_param_(nh_param), goal_{0.0,0.0,1.0}, use_yaw_(false), last_yaw_(0.0), last_cmd_x_(0.0), last_cmd_y_(0.0)
 	{
 		pub_            = nh_.advertise<geometry_msgs::TwistStamped>("/mavros/setpoint_velocity/cmd_vel",1);
 		sub_            = nh_.subscribe("/mavros/local_position/pose",1,&PIDController::PoseCallback, this);
@@ -90,7 +90,7 @@ public:
             std::cout<<"[Warning] Please set [use_yaw_] parameter, default : false"<<std::endl;
             use_yaw_ = false;
         }
-		if (!nh_param_.getParam("/sub_goal_pid/Kxy",Kx_))
+		if (!nh_param_.getParam("/sub_goal_pid/Kx",Kx_))
         {
             std::cout<<"[Warning] Please set [Kx] parameter, default : 1.0"<<std::endl;
             Kx_ = 1.0;
@@ -133,7 +133,8 @@ public:
 		std::cout<<"================================="<<std::endl;
 		std::cout<<"Parameters"<<std::endl
 		<<"use_yaw_ : "<< (use_yaw_ ? "true" : "false")<<endl
-		<<"Kxy_     : "<<Kxy_<<endl
+		<<"Kx_     : "<<Kx_<<endl
+		<<"Ky_     : "<<Ky_<<endl
 		<<"Kz_      : "<<Kz_<<endl
 		<<"Kyaw_    : "<<Kyaw_<<endl;
 		std::cout<<"================================="<<std::endl;
@@ -141,17 +142,17 @@ public:
 	void PublishVelocity()
 	{
 		//calculate linear velocity
-		double cmd_x = (goal_[0] - current_position_[0]) * Kxy_;
-		double cmd_y = (goal_[1] - current_position_[1]) * Kxy_;
+		double cmd_x = (goal_[0] - current_position_[0]) * Kx_;
+		double cmd_y = (goal_[1] - current_position_[1]) * Ky_;
 		double cmd_z = (goal_[2] - current_position_[2]) * Kz_;
 		
 		// initial goal : 0,0,1
 		
 		if(GetXYDistToGoal() < 0.6)
 		{
-//			RegulateVelocity(cmd_x,0.15);
-//			RegulateVelocity(cmd_y,0.15);
-//			RegulateVelocity(cmd_z,0.15);
+		//	RegulateVelocity(cmd_x,0.15);
+		//	RegulateVelocity(cmd_y,0.15);
+		//	RegulateVelocity(cmd_z,0.15);
 
 //			cmd_x = velxy_limit_;
 //			RegulateVelocity(cmd_y,0.15); 
@@ -163,8 +164,8 @@ public:
 		}		
 		else
 		{
-			RegulateVelocity(cmd_x,velxy_limit_);
-			RegulateVelocity(cmd_y,velxy_limit_);
+			RegulateVelocity(cmd_x,velx_limit_);
+			RegulateVelocity(cmd_y,vely_limit_);
 			RegulateVelocity(cmd_z,velz_limit_);
 		}
 		
@@ -206,12 +207,13 @@ public:
 		geometry_msgs::TwistStamped command_msg;
 		command_msg.header.stamp = ros::Time::now();
 
-		if ( current_position_[2] < 0.3) // do not change yaw if height is lower than 0.3
-		{   cmd_r = 0;	}
+	//	if ( current_position_[2] < 0.3) // do not change yaw if height is lower than 0.3
+	//	{   cmd_r = 0;	}
 
 		// assign
 		command_msg.twist.linear.x = cmd_x;
-		command_msg.twist.linear.y = cmd_y; 
+		command_msg.twist.linear.y = cmd_y;
+		//command_msg.twist.linear.y = 0.0; 
 		command_msg.twist.linear.z = cmd_z; 
 
 		
@@ -251,6 +253,7 @@ public:
 			// Get local position x,y,z
 			double local_x = msg->pose.position.x;
 			double local_y = msg->pose.position.y;
+			//double local_y = 0.0;			
 			double local_z = msg->pose.position.z;
 
 			// Rotate into global frame
