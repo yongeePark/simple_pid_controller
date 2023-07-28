@@ -6,8 +6,8 @@ Kz : 1.7
 KDz : 0.5
 Kyaw : 2.3
 
-velx_limit : 1.5
-vely_limit : 1.5
+velx_limit : 0.5
+vely_limit : 0.5
 velz_limit : 0.3
 yaw_limit : 1.4
 
