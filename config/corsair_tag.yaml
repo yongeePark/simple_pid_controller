@@ -1,0 +1,26 @@
+use_yaw : true
+
+Kx : 1.0
+Ky : 1.0
+Kz : 1.7
+KDz : 0.5
+Kyaw : 0.5
+
+velx_limit : 1.5
+vely_limit : 1.5
+velz_limit : 0.10
+yaw_limit : 0.6
+
+desired_subject_ratio : 0.30
+subject_ratio_thres : 0.05
+lateral_thres : 0.03
+ref_x_ratio : 2.0
+ref_y_ratio : 0.3
+ref_yaw_ratio : 0.25
+
+# landing parameter
+landing_height : 2.0
+landing_velz_limit : 0.5
+
+# recover_hover_height
+hovering_height : 2.0

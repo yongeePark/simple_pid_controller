@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- <arg name="robot_namespace" default="scout"/> -->
+<!--  <group ns="$(arg robot_namespace)"> -->
+    <node name="tag_landing" pkg="simple_pid_controller" type="tag_landing" respawn="false" clear_params="true" output="screen">
+      <rosparam file="$(find simple_pid_controller)/config/corsair_tag.yaml" />
+
+      <!-- temp change -->
+      <!-- <remap from="/mavros/local_position/pose" to="/mavros/vision_pose/pose"/> -->
+      
+    </node>
+  <!--</group> -->
+
+</launch>
