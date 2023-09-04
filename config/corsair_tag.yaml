@@ -24,3 +24,6 @@ landing_velz_limit : 0.5
 
 # recover_hover_height
 hovering_height : 2.0
+
+# acc limit
+acc_limit : 0.2

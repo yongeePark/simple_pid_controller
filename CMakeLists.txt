@@ -151,6 +151,11 @@ add_dependencies(tag_landing ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 target_link_libraries(tag_landing
 		${catkin_LIBRARIES}
 )
+add_executable(tag_landing_acc src/tag_landing_acc.cpp)
+add_dependencies(tag_landing_acc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(tag_landing_acc
+		${catkin_LIBRARIES}
+)
 #add_executable(pid_test src/pid_control_test.cpp)
 #add_dependencies(pid_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(pid_test
